@@ -34,6 +34,12 @@ class Service(base.Resource):
     def servers(self, service):
         return self.manager.servers(self)
 
+    def disable(self, service):
+        return self.manager.disable(self)
+
+    def enable(self, service):
+        return self.manager.enable(self)
+
 
 class ServiceManager(base.ManagerWithFind):
     """Manage :class:`Service` resources."""
@@ -73,6 +79,16 @@ class ServiceManager(base.ManagerWithFind):
         data = body['servers']
         with self.uuid_cache(obj_class, mode="w"):
             return [obj_class(self, res, loaded=True) for res in data if res]
+
+    def disable(self, service):
+        """Disable a specified service."""
+        url = "/services/%s/disable" % base.getid(service)
+        return self.api.client.post(url)
+
+    def enable(self, service):
+        """Enable a specified service."""
+        url = "/services/%s/enable" % base.getid(service)
+        return self.api.client.post(url)
 
 
 def do_service_list(cs, args):
@@ -124,3 +140,15 @@ def do_service_servers(cs, args):
     columns = ['ID', 'Name', 'Status', 'Networks']
     formatters = {'Networks': utils._format_servers_list_networks}
     utils.print_list(servers, columns, formatters)
+
+
+@utils.arg('id', metavar='<ID>', help='Service ID to disable.')
+def do_service_disable(cs, args):
+    """Disable a specified service."""
+    cs.rax_services_python_novaclient_ext.disable(args.id)
+
+
+@utils.arg('id', metavar='<ID>', help='Service ID to enable.')
+def do_service_enable(cs, args):
+    """Enable a specified service."""
+    cs.rax_services_python_novaclient_ext.enable(args.id)
